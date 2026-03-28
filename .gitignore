@@ -1,0 +1,52 @@
+cat > .gitignore <<'EOF'
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.pytest_cache/
+.mypy_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+app/.venv/
+
+# Secrets / env files
+.env
+.env.*
+*.pem
+*.key
+*.crt
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Coverage / test artifacts
+.coverage
+htmlcov/
+coverage.xml
+
+# Local database files
+*.sqlite3
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+
+# Ansible / temp
+*.retry
+
+# Project-specific future exports / generated files
+exports/
+EOF
