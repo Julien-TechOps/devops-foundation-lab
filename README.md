@@ -111,6 +111,39 @@ The MVP app currently uses hardcoded database connection settings in `app/src/ap
 
 ---
 
+## DevOps Lifecycle
+
+This project follows a simplified DevOps lifecycle, progressively implemented through each phase of the lab.
+
+| Stage   | Implementation in this project |
+|--------|-------------------------------|
+| **Plan** | Backlog and sprint structure in `docs/project/` |
+| **Code** | Flask application and infrastructure code |
+| **Build** | Python dependencies via `requirements.txt` (future: containerization) |
+| **Test** | Manual validation of application and database interactions |
+| **Release** | Versioning with Git and GitHub |
+| **Deploy** | Manual deployment (MVP) → transitioning to Ansible |
+| **Operate** | Services running on `app-01` and `db-01` |
+| **Monitor** | Planned (health checks, logs, observability) |
+
+---
+
+### 📌 Current Focus
+
+The current phase focuses on improving the **Deploy** stage by introducing Ansible-based automation.
+
+---
+
+### 🔄 Approach
+
+This project is built iteratively:
+
+- start with a working MVP  
+- understand each step manually  
+- progressively automate and improve reliability  
+
+The objective is to move from a **manual deployment** to a **fully automated and reproducible system**.
+
 ## Application
 
 The current application is a minimal Flask form that:
@@ -202,7 +235,7 @@ The goal is not only to make the stack work, but to make each step understandabl
 
 ---
 
-## 🤖 AI-assisted development
+## AI-assisted development
 
 This project was developed with the support of AI tools (ChatGPT & Codex) used as engineering assistants.
 
