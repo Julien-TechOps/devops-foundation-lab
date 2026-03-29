@@ -46,8 +46,6 @@ Application flow:
 
 ## Repository Structure
 
-## Repository Structure
-
 - `app/`  
   Application codebase, Python dependencies, and test area
 
@@ -74,6 +72,9 @@ Application flow:
 
 - `docs/runbook/`  
   Step-by-step operational and learning documentation
+
+- `docs/project/`  
+  Project tracking, sprint scope, roadmap, and backlog
 
 ---
 
@@ -145,7 +146,7 @@ By default, the app listens on:
 
 ## Documentation
 
-The main runbooks are available in `docs/runbook/`:
+Technical runbooks are available in `docs/runbook/`:
 
 - [`docs/runbook/1-multipass.md`](docs/runbook/1-multipass.md)
 - [`docs/runbook/2-ssh.md`](docs/runbook/2-ssh.md)
@@ -158,6 +159,20 @@ Recommended reading order:
 2. SSH access setup
 3. Manual deployment
 4. Local Python environment
+
+Project planning documents are available in `docs/project/`:
+
+- [`docs/project/project-overview.md`](docs/project/project-overview.md)
+- [`docs/project/backlog.md`](docs/project/backlog.md)
+- [`docs/project/sprint-1-mvp.md`](docs/project/sprint-1-mvp.md)
+- [`docs/project/sprint-2-ansible.md`](docs/project/sprint-2-ansible.md)
+
+Suggested reading order:
+
+1. Project overview
+2. Backlog
+3. Sprint 1 MVP
+4. Sprint 2 Ansible foundations
 
 ---
 
@@ -184,3 +199,19 @@ This lab focuses on:
 - learning by building and documenting
 
 The goal is not only to make the stack work, but to make each step understandable and repeatable.
+
+---
+
+## 🤖 AI-assisted development
+
+This project was developed with the support of AI tools (ChatGPT & Codex) used as engineering assistants.
+
+They were leveraged to:
+- challenge design decisions
+- accelerate problem-solving
+- support code writing and refactoring
+- improve documentation and structure
+
+All technical choices, architecture decisions, and validations remain fully understood and owned.
+
+The goal is not to replace engineering thinking, but to enhance it through iteration, feedback, and critical reasoning.

@@ -26,6 +26,7 @@ app/.venv/
 Thumbs.db
 .vscode/
 .idea/
+.codex
 
 # Logs
 *.log
