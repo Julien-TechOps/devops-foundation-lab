@@ -161,3 +161,89 @@ Expected result:
 Key takeaway:
 The `common` role establishes a minimal, reusable baseline across all hosts.
 Idempotence is a core principle: the same playbook can be executed multiple times without introducing unintended changes.
+
+## Step 7 - Provision MariaDB with Ansible
+
+Goal
+
+Install and start MariaDB on the database host using Ansible.
+
+Why
+
+The database is a critical component of the application stack.
+It must be:
+
+installed automatically
+started reliably
+reproducible across environments
+
+This step focuses only on system-level setup (not database configuration yet).
+
+#### Create the database playbook
+
+Create playbooks/db.yml:
+
+- name: Apply database configuration
+  hosts: db
+  become: true
+
+  roles:
+    - db
+
+#### Implement the db role
+
+Create roles/db/tasks/main.yml:
+
+- name: Install MariaDB server
+  apt:
+    name: mariadb-server
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Ensure MariaDB is started and enabled
+  service:
+    name: mariadb
+    state: started
+    enabled: true
+
+#### Run the playbook
+
+ansible-playbook -i inventory/dev/hosts.ini playbooks/db.yml
+
+#### Validate installation
+
+Check service status (on db-01) : 
+
+    ssh ubuntu@192.168.1.43
+    systemctl status mariadb
+
+Expected:
+
+    service is active (running)
+
+Check MariaDB access
+
+    sudo mysql
+
+Expected:
+
+access to MariaDB prompt without password (unix_socket auth)
+
+#### Validate idempotency
+
+Run the playbook again:
+
+ansible-playbook -i inventory/dev/hosts.ini playbooks/db.yml
+
+Expected:
+
+no errors
+minimal or no changes
+service remains stable
+
+Result
+
+MariaDB is installed on db-01
+service is running and enabled at boot
+provisioning is reproducible via Ansible
