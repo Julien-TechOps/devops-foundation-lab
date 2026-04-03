@@ -11,3 +11,24 @@
     state: started
     enabled: true
 
+- name: Install PyMySQL driver
+  apt:
+    name: python3-pymysql
+    state: present
+
+- name: Create application database
+  community.mysql.mysql_db:
+    name: app_db
+    state: present
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+
+- name: Create application user
+  community.mysql.mysql_user:
+    name: app_user
+    password: password
+    priv: "app_db.*:ALL"
+    host: "%"
+    state: present
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+
+

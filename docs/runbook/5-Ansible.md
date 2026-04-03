@@ -179,7 +179,7 @@ reproducible across environments
 
 This step focuses only on system-level setup (not database configuration yet).
 
-#### Create the database playbook
+### Create the database playbook
 
 Create playbooks/db.yml:
 
@@ -190,7 +190,7 @@ Create playbooks/db.yml:
   roles:
     - db
 
-#### Implement the db role
+### Implement the db role
 
 Create roles/db/tasks/main.yml:
 
@@ -207,11 +207,11 @@ Create roles/db/tasks/main.yml:
     state: started
     enabled: true
 
-#### Run the playbook
+### Run the playbook
 
 ansible-playbook -i inventory/dev/hosts.ini playbooks/db.yml
 
-#### Validate installation
+### Validate installation
 
 Check service status (on db-01) : 
 
@@ -230,7 +230,7 @@ Expected:
 
 access to MariaDB prompt without password (unix_socket auth)
 
-#### Validate idempotency
+### Validate idempotency
 
 Run the playbook again:
 
@@ -242,8 +242,114 @@ no errors
 minimal or no changes
 service remains stable
 
-Result
+Result :
 
 MariaDB is installed on db-01
 service is running and enabled at boot
 provisioning is reproducible via Ansible
+
+## Step 8 - Configure database (DB + user)
+
+### Goal
+Automate the creation of the application database and user in MariaDB.
+
+### Why
+After installing and starting MariaDB, the database must be prepared to:
+- store application data
+- allow external connections from the application server
+
+This step introduces database-level automation using Ansible MySQL modules.
+
+---
+
+### 1. Install required Python driver
+
+Add to `roles/db/tasks/main.yml`:
+
+    - name: Install PyMySQL driver
+      apt:
+        name: python3-pymysql
+        state: present
+
+Why:
+- required by Ansible MySQL modules
+- enables communication between Ansible and MariaDB
+
+---
+
+### 2. Create application database
+
+    - name: Create application database
+      community.mysql.mysql_db:
+        name: app_db
+        state: present
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+---
+
+### 3. Create application user
+
+    - name: Create application user
+      community.mysql.mysql_user:
+        name: app_user
+        password: password
+        priv: "app_db.*:ALL"
+        host: "%"
+        state: present
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+Why:
+- user is accessible from any host (`%`)
+- required for application connectivity from `app-01`
+
+---
+
+### 4. Run the playbook
+
+    ansible-playbook -i inventory/dev/hosts.ini playbooks/db.yml
+
+---
+
+### 5. Validate database and user
+
+On `db-01`:
+
+    sudo mysql -e "SHOW DATABASES;"
+    sudo mysql -e "SELECT User, Host FROM mysql.user;"
+
+Expected:
+- `app_db` exists
+- `app_user` exists with host `%`
+
+---
+
+### 6. Validate idempotency
+
+Run again:
+
+    ansible-playbook -i inventory/dev/hosts.ini playbooks/db.yml
+
+Expected:
+- no errors
+- no unnecessary changes (`changed=0`)
+
+---
+
+### Result
+
+- database `app_db` is created
+- user `app_user` is configured with proper privileges
+- configuration is reproducible and stable
+
+---
+
+### Key takeaway
+
+This step demonstrates the transition from:
+- system configuration (installing MariaDB)
+to:
+- service configuration (managing database state)
+
+Ansible modules ensure idempotent management of database resources.
+
+## Step 9 - 
