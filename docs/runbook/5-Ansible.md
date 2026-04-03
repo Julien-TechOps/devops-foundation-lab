@@ -352,4 +352,229 @@ to:
 
 Ansible modules ensure idempotent management of database resources.
 
-## Step 9 - 
+## Step 9 - Apply database schema
+
+### Goal
+Import the initial SQL schema required by the application.
+
+### Why
+After provisioning MariaDB and creating the application database, the schema must be applied so that the application can store user data.
+
+This step creates the `users` table used by the Flask application.
+
+---
+
+### 1. Prepare the schema file
+
+Update `sql/schema.sql` to make repeated imports safer:
+
+    CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        first_name VARCHAR(50),
+        last_name VARCHAR(50)
+    );
+
+Why:
+- prevents failure if the table already exists
+- makes repeated execution more tolerant in a lab context
+
+---
+
+### 2. Copy the schema file to the database host
+
+Add to `roles/db/tasks/main.yml`:
+
+    - name: Copy schema.sql
+      copy:
+        src: ../../sql/schema.sql
+        dest: /tmp/schema.sql
+
+---
+
+### 3. Import the schema
+
+    - name: Import schema
+      community.mysql.mysql_db:
+        name: app_db
+        state: import
+        target: /tmp/schema.sql
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+---
+
+### 4. Run the playbook
+
+    ansible-playbook -i inventory/dev/hosts.ini playbooks/db.yml
+
+---
+
+### 5. Validate schema import
+
+On `db-01`:
+
+    sudo mysql app_db -e "SHOW TABLES;"
+    sudo mysql app_db -e "DESCRIBE users;"
+
+Expected:
+- the `users` table exists in `app_db`
+- table structure includes:
+  - `id`
+  - `first_name`
+  - `last_name`
+
+Observed result:
+
+    +------------+-------------+------+-----+---------+----------------+
+    | Field      | Type        | Null | Key | Default | Extra          |
+    +------------+-------------+------+-----+---------+----------------+
+    | id         | int(11)     | NO   | PRI | NULL    | auto_increment |
+    | first_name | varchar(50) | YES  |     | NULL    |                |
+    | last_name  | varchar(50) | YES  |     | NULL    |                |
+    +------------+-------------+------+-----+---------+----------------+
+
+---
+
+### 6. Re-run and observe behavior
+
+Run the same playbook again:
+
+    ansible-playbook -i inventory/dev/hosts.ini playbooks/db.yml
+
+Observed result:
+- schema import task runs again
+- playbook remains functional
+- task reports changes (`changed=1`)
+
+---
+
+### Result
+
+- schema is imported successfully
+- `users` table is available for the application
+- repeated execution is tolerated without failure
+
+---
+
+### Limitation
+
+The schema import task is functional but not fully idempotent.
+
+Using `community.mysql.mysql_db` with `state: import` re-executes the SQL import on each run.
+This is acceptable for the current learning stage, but a more advanced project would require a better schema migration strategy. 
+
+## Step 10 - Application installation and configuration
+
+### Goal
+Deploy the Flask application on `app-01` using an Ansible role.
+
+### Why
+The application must be deployed in a repeatable, automated, and controlled way.
+
+---
+
+### 1. Install Python system packages
+
+    - name: Install Python system packages
+    apt:
+        name:
+        - python3
+        - python3-pip
+        - python3-venv
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+Why:
+- ensures required Python runtime is present on the target host
+- uses cache_valid_time to avoid unnecessary apt updates
+- guarantees consistent environment before deploying the app
+
+### 2. Create application directory
+
+    - name: Create app directory
+    file:
+        path: /opt/app
+        state: directory
+        mode: "0755"
+
+Why:
+- standard location for deployed application
+- separates application from system directories
+- ensures directory exists before copying files
+
+### 3. Copy application source code
+
+    - name: Copy application code
+    copy:
+        src: ../../app/src/
+        dest: /opt/app/
+        
+    - name: Copy requirements.txt
+    copy:
+        src: ../../app/requirements.txt
+        dest: /opt/app/requirements.txt
+
+Why:
+- transfers application code from control node to target host
+- keeps deployment simple (no git clone yet)
+- prepares environment for dependency installation
+
+### 4. Create Python virtual environment
+
+    - name: Create virtual environment
+    command: python3 -m venv /opt/app/.venv
+    args:
+        creates: /opt/app/.venv/bin/activate
+
+Why:
+- isolates application dependencies from system Python
+- required due to modern Python packaging constraints (PEP 668)
+- creates ensures idempotency (no recreation if already exists)
+
+### 5. Install Python dependencies
+
+    - name: Install Python requirements in virtualenv
+    pip:
+        requirements: /opt/app/requirements.txt
+        virtualenv: /opt/app/.venv
+
+Why:
+- installs Flask and PyMySQL inside the virtual environment
+- ensures consistent dependency management
+- avoids conflicts with system packages
+
+### 6. Check application runtime state
+
+    - name: Check if Flask app is already listening on port 5000
+    shell: ss -ltn '( sport = :5000 )' | grep 5000
+    register: flask_port_check
+    failed_when: false
+    changed_when: false
+
+Why:
+- detects if the application is already running
+- avoids starting duplicate processes
+- ensures idempotent behavior
+
+### 7. Start application (if not running)
+
+    - name: Start Flask application if not already running
+    shell: nohup /opt/app/.venv/bin/python /opt/app/app.py > /tmp/app.log 2>&1 &
+    when: flask_port_check.rc != 0
+
+Why:
+- starts the application only if not already running
+- nohup allows background execution without SSH session dependency
+- basic runtime management without a process supervisor
+
+Result: 
+- application is deployed automatically via Ansible
+- dependencies are installed in an isolated environment
+- application is accessible via HTTP on port 5000
+- deployment is repeatable and idempotent
+
+Limitations
+- application is not managed as a service (systemd)
+- no automatic restart on crash
+- no restart after server reboot
+- application configuration is still hardcoded

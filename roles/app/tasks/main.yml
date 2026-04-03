@@ -1,0 +1,45 @@
+- name: Install Python system packages
+  apt:
+    name:
+      - python3
+      - python3-pip
+      - python3-venv
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Create app directory
+  file:
+    path: /opt/app
+    state: directory
+    mode: "0755"
+
+- name: Copy application code
+  copy:
+    src: ../../app/src/
+    dest: /opt/app/
+
+- name: Copy requirements.txt
+  copy:
+    src: ../../app/requirements.txt
+    dest: /opt/app/requirements.txt
+
+- name: Create virtual environment
+  command: python3 -m venv /opt/app/.venv
+  args:
+    creates: /opt/app/.venv/bin/activate
+
+- name: Install Python requirements in virtualenv
+  pip:
+    requirements: /opt/app/requirements.txt
+    virtualenv: /opt/app/.venv
+
+- name: Check if Flask app is already listening on port 5000
+  shell: ss -ltn '( sport = :5000 )' | grep 5000
+  register: flask_port_check
+  failed_when: false
+  changed_when: false
+
+- name: Start Flask application if not already running
+  shell: nohup /opt/app/.venv/bin/python /opt/app/app.py > /tmp/app.log 2>&1 &
+  when: flask_port_check.rc != 0
