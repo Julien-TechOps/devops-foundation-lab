@@ -31,4 +31,16 @@
     state: present
     login_unix_socket: /var/run/mysqld/mysqld.sock
 
+- name: Copy schema.sql
+  copy:
+    src: ../../sql/schema.sql
+    dest: /tmp/schema.sql
+
+- name: Import schema
+  community.mysql.mysql_db:
+    name: app_db
+    state: import
+    target: /tmp/schema.sql
+    login_unix_socket: /var/run/mysqld/mysqld.sock  
+
 
