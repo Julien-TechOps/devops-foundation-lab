@@ -1,6 +1,6 @@
 # Project Overview
 
-## 🎯 Purpose
+## Purpose
 
 This document provides a high-level view of the project from a product and delivery perspective.
 
@@ -13,7 +13,7 @@ Technical details are documented in the main README.
 
 ---
 
-## 🧭 Themes
+## Themes
 
 - Application Functionality  
 - Infrastructure & Environment  
@@ -22,7 +22,7 @@ Technical details are documented in the main README.
 
 ---
 
-## 🧱 Epics
+## Epics
 
 - Build a minimal functional application  
 - Set up a working infrastructure  
@@ -31,32 +31,36 @@ Technical details are documented in the main README.
 
 ---
 
-## 📊 Current Status
+## Current Status
 
-- MVP manual deployment: DONE  
-- Documentation & version control: DONE  
-- Automation (Ansible): IN PROGRESS  
+- Sprint 1 MVP manual deployment: DONE  
+- Sprint 2 Ansible foundations: DONE  
+- Sprint 3 production-readiness improvements: NEXT  
 
 ---
 
-## 🛣️ Roadmap
+## Roadmap
 
 ### Current Focus
-- Ansible-based configuration (roles: common, db, app)
+- Freeze Sprint 2 deliverables and documentation
+- Prepare Sprint 3 around runtime reliability and configuration management
 
 ### Next
-- Infrastructure provisioning automation
-- Health checks
-- Environment separation (dev/test)
+- Replace `nohup` with a `systemd` service
+- Move hardcoded configuration into `group_vars/`
+- Clean up application deployment logic and make it more maintainable
 
 ### Later
+- Infrastructure provisioning automation
+- Environment separation (dev/test)
+- Health checks
 - CI/CD pipeline
 - Containerization
 - Monitoring
 
 ---
 
-## 🧠 Principles
+## Principles
 
 - Keep MVP simple and functional  
 - Automate only after understanding manual steps  

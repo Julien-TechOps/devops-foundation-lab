@@ -1,13 +1,13 @@
 # Product Backlog
 
-## DONE
+## DONE (Sprint 1)
 - MVP Flask app
 - MariaDB setup
 - VM provisioning (manual)
 - SSH access
 - Documentation (runbook)
 
-## CURRENT (Sprint 2)
+## DONE (Sprint 2)
 - Ansible inventory setup
 - Ansible connectivity (ping)
 - Role: common
@@ -15,12 +15,16 @@
 - Role: app
 - site.yml orchestration
 
-## NEXT
+## NEXT (Sprint 3)
+- Application runtime (systemd)
+- Externalize application configuration
+- Move hardcoded values to `group_vars/`
+- Improve app role idempotency and service management
+
+## LATER
 - Automate VM provisioning (Multipass script)
 - Health checks
 - Environment separation (dev/test)
-
-## LATER
 - CI/CD pipeline
 - Dockerization
 - Monitoring

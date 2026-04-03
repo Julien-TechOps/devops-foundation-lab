@@ -1,0 +1,17 @@
+- name: Apply common configuration
+  hosts: all
+  become: true
+  roles:
+    - common
+
+- name: Apply database configuration
+  hosts: db
+  become: true
+  roles:
+    - db
+
+- name: Deploy application
+  hosts: app
+  become: true
+  roles:
+    - app

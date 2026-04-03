@@ -578,3 +578,61 @@ Limitations
 - no automatic restart on crash
 - no restart after server reboot
 - application configuration is still hardcoded
+
+## Step 11 - Full stack orchestration (site.yml)
+
+### 1. Define site.yml
+
+The `site.yml` playbook acts as the global entrypoint:
+
+    - name: Apply common configuration
+    hosts: all
+    become: true
+    roles:
+        - common
+
+    - name: Apply database configuration
+    hosts: db
+    become: true
+    roles:
+        - db
+
+    - name: Deploy application
+    hosts: app
+    become: true
+    roles:
+        - app
+
+### 2. Execution order
+
+The orchestration enforces a logical order:
+common → base system configuration on all hosts
+db → database installation and setup on db-01
+app → application deployment on app-01
+
+This guarantees that:
+- system dependencies are available
+- database is ready before application connects to it
+
+### 3. Run full deployment
+
+    ansible-playbook -i inventory/dev/hosts.ini playbooks/site.yml
+
+### 4. Validation
+
+After execution:
+- database is available on db-01
+- application is running on app-01
+- appplication is accessible via: http://<app-ip>:5000
+data submitted via the web form is stored in MariaDB
+
+Result:
+- full stack deployment is executed with a single command
+- infrastructure is reproducible end-to-end
+- roles are orchestrated in a controlled sequence
+
+Limitations
+- no environment separation beyond inventory (dev, test)
+- no CI/CD pipeline yet
+- no rollback strategy
+- application runtime still not managed (no systemd)
