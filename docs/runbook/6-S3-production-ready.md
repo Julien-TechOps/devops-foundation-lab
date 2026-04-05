@@ -167,7 +167,6 @@ Create the directory and template file:
 
 Create `app/src/templates/index.html` with:
 
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -195,7 +194,7 @@ Create `app/src/templates/index.html` with:
   </form>
 </body>
 </html>
-```
+
 
 Why:
 
