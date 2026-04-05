@@ -24,12 +24,12 @@
 
 - name: Create application user
   community.mysql.mysql_user:
-    name: app_user
-    password: password
-    priv: "app_db.*:ALL"
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
     host: "%"
+    priv: "{{ db_name }}.*:ALL"
     state: present
-    login_unix_socket: /var/run/mysqld/mysqld.sock
+    login_unix_socket: /run/mysqld/mysqld.sock
 
 - name: Copy schema.sql
   copy:

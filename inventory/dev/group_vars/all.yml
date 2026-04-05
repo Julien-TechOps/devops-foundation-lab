@@ -1,0 +1,12 @@
+app_name: flask-user-app
+app_dir: /opt/app
+app_user: appuser
+app_group: appuser
+
+app_port: 5000
+flask_env: development
+
+db_host: 192.168.1.43
+db_name: app_db
+db_user: app_user
+db_password: app_password

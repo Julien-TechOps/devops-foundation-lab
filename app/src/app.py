@@ -1,56 +1,44 @@
-from flask import Flask, request
+import os
+from flask import Flask, render_template, request, redirect
 import pymysql
 
-# Create the Flask application
 app = Flask(__name__)
 
-# Database connection settings
-# For now, values are hardcoded because this is still the manual MVP phase.
-# Later, they should be moved to environment variables.
-DB_HOST = "192.168.1.43"
-DB_USER = "app_user"
-DB_PASSWORD = "password"
-DB_NAME = "app_db"
+DB_HOST = os.environ["DB_HOST"]
+DB_NAME = os.environ["DB_NAME"]
+DB_USER = os.environ["DB_USER"]
+DB_PASSWORD = os.environ["DB_PASSWORD"]
+APP_PORT = int(os.environ.get("APP_PORT", "5000"))
 
-@app.route("/", methods=["GET"])
-def form():
-    """
-    Display a very simple HTML form.
-    This is the entry point of the MVP.
-    """
-    return """
-        <h2>DevOps Foundation Lab</h2>
-        <form method="POST" action="/submit">
-            First name: <input name="first_name"><br><br>
-            Last name: <input name="last_name"><br><br>
-            <input type="submit" value="Send">
-        </form>
-    """
-
-@app.route("/submit", methods=["POST"])
-def submit():
-    """
-    Receive form data and insert it into the MariaDB database.
-    """
-    first_name = request.form["first_name"]
-    last_name = request.form["last_name"]
-
-    conn = pymysql.connect(
+def get_connection():
+    return pymysql.connect(
         host=DB_HOST,
         user=DB_USER,
         password=DB_PASSWORD,
-        database=DB_NAME
+        database=DB_NAME,
+        cursorclass=pymysql.cursors.Cursor
     )
 
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO users (first_name, last_name) VALUES (%s, %s)",
-        (first_name, last_name)
-    )
-    conn.commit()
-    conn.close()
+@app.route("/", methods=["GET", "POST"])
+def index():
+    if request.method == "POST":
+        first_name = request.form["first_name"]
+        last_name = request.form["last_name"]
 
-    return "User added!"
+        connection = get_connection()
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "INSERT INTO users (first_name, last_name) VALUES (%s, %s)",
+                    (first_name, last_name)
+                )
+            connection.commit()
+        finally:
+            connection.close()
+
+        return redirect("/")
+
+    return render_template("index.html")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=APP_PORT)

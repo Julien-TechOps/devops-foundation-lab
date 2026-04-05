@@ -1,45 +1,88 @@
-- name: Install Python system packages
-  apt:
-    name:
-      - python3
-      - python3-pip
-      - python3-venv
-    state: present
-    update_cache: true
-    cache_valid_time: 3600
+- name: Create app group
+  ansible.builtin.group:
+    name: "{{ app_group }}"
+    system: true
+
+- name: Create app user
+  ansible.builtin.user:
+    name: "{{ app_user }}"
+    group: "{{ app_group }}"
+    system: true
+    create_home: false
+    shell: /usr/sbin/nologin
 
 - name: Create app directory
-  file:
-    path: /opt/app
+  ansible.builtin.file:
+    path: "{{ app_dir }}"
     state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
     mode: "0755"
 
-- name: Copy application code
-  copy:
-    src: ../../app/src/
-    dest: /opt/app/
+- name: Copy app.py
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../app/src/app.py"
+    dest: "{{ app_dir }}/app.py"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "0644"
+  notify: Restart app service
 
 - name: Copy requirements.txt
-  copy:
-    src: ../../app/requirements.txt
-    dest: /opt/app/requirements.txt
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../app/requirements.txt"
+    dest: "{{ app_dir }}/requirements.txt"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "0644"
 
-- name: Create virtual environment
-  command: python3 -m venv /opt/app/.venv
-  args:
-    creates: /opt/app/.venv/bin/activate
+- name: Create templates directory
+  ansible.builtin.file:
+    path: "{{ app_dir }}/templates"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "0755"
 
-- name: Install Python requirements in virtualenv
-  pip:
-    requirements: /opt/app/requirements.txt
-    virtualenv: /opt/app/.venv
+- name: Copy HTML templates
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../app/src/templates/"
+    dest: "{{ app_dir }}/templates/"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "0644"
+  notify: Restart app service
 
-- name: Check if Flask app is already listening on port 5000
-  shell: ss -ltn '( sport = :5000 )' | grep 5000
-  register: flask_port_check
-  failed_when: false
-  changed_when: false
+- name: Create virtualenv
+  ansible.builtin.command:
+    cmd: "python3 -m venv {{ app_dir }}/.venv"
+    creates: "{{ app_dir }}/.venv/bin/python"
 
-- name: Start Flask application if not already running
-  shell: nohup /opt/app/.venv/bin/python /opt/app/app.py > /tmp/app.log 2>&1 &
-  when: flask_port_check.rc != 0
+- name: Install Python dependencies
+  ansible.builtin.pip:
+    requirements: "{{ app_dir }}/requirements.txt"
+    virtualenv: "{{ app_dir }}/.venv"
+
+- name: Deploy environment file
+  ansible.builtin.template:
+    src: app.env.j2
+    dest: "{{ app_dir }}/app.env"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "0640"
+  notify: Restart app service
+
+- name: Deploy systemd service
+  ansible.builtin.template:
+    src: flask-app.service.j2
+    dest: "/etc/systemd/system/{{ app_name }}.service"
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart app service
+
+- name: Ensure app service is enabled and started
+  ansible.builtin.systemd:
+    name: "{{ app_name }}"
+    enabled: true
+    state: started
